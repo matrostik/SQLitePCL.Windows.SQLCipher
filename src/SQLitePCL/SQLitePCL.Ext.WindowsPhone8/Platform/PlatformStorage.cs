@@ -9,6 +9,7 @@
 
 namespace SQLitePCL
 {
+    using System;
     using System.IO;
     using Windows.Storage;
 
@@ -44,7 +45,7 @@ namespace SQLitePCL
         {
             var result = filename;
 
-            if (!Path.IsPathRooted(filename))
+            if (!Path.IsPathRooted(filename) && !Uri.IsWellFormedUriString(filename, UriKind.Absolute))
             {
                 result = Path.Combine(ApplicationData.Current.LocalFolder.Path, filename);
             }

@@ -45,7 +45,7 @@ namespace SQLitePCL
         {
             var result = filename;
 
-            if (!Path.IsPathRooted(filename))
+            if (!Path.IsPathRooted(filename) && !Uri.IsWellFormedUriString(filename, UriKind.Absolute))
             {
                 result = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), filename);
             }

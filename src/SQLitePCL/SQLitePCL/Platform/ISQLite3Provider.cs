@@ -16,6 +16,8 @@ namespace SQLitePCL
     /// </summary>
     public interface ISQLite3Provider
     {
+        int Sqlite3Win32SetDirectory();
+
         int Sqlite3Open(IntPtr filename, out IntPtr db);
 
         int Sqlite3CloseV2(IntPtr db);

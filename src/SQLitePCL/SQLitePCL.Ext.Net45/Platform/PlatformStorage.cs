@@ -9,6 +9,7 @@
 
 namespace SQLitePCL
 {
+    using System;
     using System.IO;
 
     /// <summary>
@@ -41,7 +42,14 @@ namespace SQLitePCL
         /// </summary>
         string IPlatformStorage.GetLocalFilePath(string filename)
         {
-            return Path.GetFullPath(filename);
+            var result = filename;
+
+            if (!Uri.IsWellFormedUriString(filename, UriKind.Absolute))
+            {
+                result = Path.GetFullPath(filename);
+            }
+
+            return result;
         }
 
         /// <summary>

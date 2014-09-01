@@ -37,11 +37,17 @@ namespace SQLitePCL
             }
         }
 
-        public int Sqlite3Open(IntPtr filename, out IntPtr db)
+        int ISQLite3Provider.Sqlite3Win32SetDirectory()
+        {
+            return SQLite3RuntimeProvider.sqlite3_win32_set_directory(2, PlatformStorage.Instance.GetTemporaryDirectoryPath());
+        }
+
+        int ISQLite3Provider.Sqlite3Open(IntPtr filename, out IntPtr db)
         {
             long databasePtr;
 
-            var result = SQLite3RuntimeProvider.sqlite3_open(filename.ToInt64(), out databasePtr);
+            // READWRITE|CREATE|URI
+            var result = SQLite3RuntimeProvider.sqlite3_open_v2(filename.ToInt64(), out databasePtr, 0x46, IntPtr.Zero.ToInt64());
 
             db = new IntPtr(databasePtr);
 

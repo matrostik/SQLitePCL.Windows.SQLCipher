@@ -10,15 +10,35 @@
 #include "pch.h"
 #include "SQLite3RuntimeProvider.h"
 
+extern "C" { SQLITE_API int sqlite3_win32_set_directory(unsigned long type, const wchar_t* zValue); };
+
 using namespace SQLitePCL::Ext::WindowsPhone8::RuntimeProxy;
 using namespace Platform;
-using namespace std;
+
+int32 SQLite3RuntimeProvider::sqlite3_win32_set_directory(uint32 type, String^ zValue)
+{
+	return ::sqlite3_win32_set_directory(type, zValue->Data());
+}
 
 int32 SQLite3RuntimeProvider::sqlite3_open(int64 filename, int64* db)
 {
 	sqlite3* sqlite3 = nullptr;
 
 	int32 result = ::sqlite3_open((const char*)filename, &sqlite3);
+
+	if (db)
+	{
+		*db = (int64)sqlite3;
+	}
+
+	return result;
+}
+
+int32 SQLite3RuntimeProvider::sqlite3_open_v2(int64 filename, int64* db, int32 flags, int64 zVfs)
+{
+	sqlite3* sqlite3 = nullptr;
+
+	int32 result = ::sqlite3_open_v2((const char*)filename, &sqlite3, flags, (const char*)zVfs);
 
 	if (db)
 	{

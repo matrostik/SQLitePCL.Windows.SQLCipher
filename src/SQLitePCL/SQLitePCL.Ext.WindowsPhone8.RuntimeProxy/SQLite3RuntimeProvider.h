@@ -16,10 +16,16 @@ namespace SQLitePCL
 		{
 			namespace RuntimeProxy
 			{
+				using namespace Platform;
+
 				public ref class SQLite3RuntimeProvider sealed
 				{
 				public:
+					static int32 sqlite3_win32_set_directory(uint32 type, String^ zValue);
+
 					static int32 sqlite3_open(int64 filename, int64* db);
+
+					static int32 sqlite3_open_v2(int64 filename, int64* db, int32 flags, int64 zVfs);
 
 					static int32 sqlite3_close_v2(int64 db);
 
@@ -39,7 +45,7 @@ namespace SQLitePCL
 
 					static int32 sqlite3_bind_double(int64 stmHandle, int32 iParam, float64 value);
 
-					static int32 sqlite3_bind_blob(int64 stmHandle, int32 iParam, const Platform::Array<uint8>^ value, int32 length, int64 destructor);
+					static int32 sqlite3_bind_blob(int64 stmHandle, int32 iParam, const Array<uint8>^ value, int32 length, int64 destructor);
 
 					static int32 sqlite3_bind_null(int64 stmHandle, int32 iParam);
 
@@ -105,7 +111,7 @@ namespace SQLitePCL
 
 					static void sqlite3_result_double(int64 context, float64 result);
 
-					static void sqlite3_result_blob(int64 context, const Platform::Array<uint8>^ result, int32 length, int64 destructor);
+					static void sqlite3_result_blob(int64 context, const Array<uint8>^ result, int32 length, int64 destructor);
 
 					static void sqlite3_result_null(int64 context);
 

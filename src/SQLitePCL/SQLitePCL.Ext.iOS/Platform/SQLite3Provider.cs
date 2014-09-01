@@ -39,9 +39,15 @@ namespace SQLitePCL
             }
         }
 
-        public int Sqlite3Open(IntPtr filename, out IntPtr db)
+        int ISQLite3Provider.Sqlite3Win32SetDirectory()
         {
-            return NativeMethods.sqlite3_open(filename, out db);
+            return 0;
+        }
+
+        int ISQLite3Provider.Sqlite3Open(IntPtr filename, out IntPtr db)
+        {
+            // READWRITE|CREATE|URI
+            return NativeMethods.sqlite3_open_v2(filename, out db, 0x46, IntPtr.Zero);
         }
 
         int ISQLite3Provider.Sqlite3CloseV2(IntPtr db)
@@ -439,6 +445,9 @@ namespace SQLitePCL
         {
             [DllImport("sqlite3", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_open")]
             internal static extern int sqlite3_open(IntPtr filename, out IntPtr db);
+
+            [DllImport("sqlite3", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_open_v2")]
+            internal static extern int sqlite3_open_v2(IntPtr filename, out IntPtr db, int flags, IntPtr zVfs);
 
             [DllImport("sqlite3", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_close")]
             internal static extern int sqlite3_close_v2(IntPtr db);

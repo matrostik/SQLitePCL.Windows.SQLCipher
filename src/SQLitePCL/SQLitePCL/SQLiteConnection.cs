@@ -456,24 +456,16 @@ namespace SQLitePCL
                 {
                     try
                     {
-                        using (var connection = new SQLiteConnection(":memory:", false))
+                        if (this.sqlite3Provider.Sqlite3Win32SetDirectory() != (int)SQLiteResult.OK)
                         {
-                            var temporaryDirectoryPath = this.platformStorage.GetTemporaryDirectoryPath();
-
-                            using (var statement = connection.Prepare(string.Format("PRAGMA temp_store_directory = '{0}';", temporaryDirectoryPath)))
-                            {
-                                var result = statement.Step();
-
-                                if (result != SQLiteResult.DONE)
-                                {
-                                    var errmsg = connection.ErrorMessage();
-
-                                    throw new SQLiteException("Unable to set temporary directory: " + temporaryDirectoryPath + " Result: " + result.ToString() + " Details: " + errmsg);
-                                }
-                            }
+                            throw new SQLiteException("Unable to set temporary directory.");
                         }
 
                         SQLiteConnection.temporaryDirectorySet = true;
+                    }
+                    catch (SQLiteException)
+                    {
+                        throw;
                     }
                     catch (Exception ex)
                     {
