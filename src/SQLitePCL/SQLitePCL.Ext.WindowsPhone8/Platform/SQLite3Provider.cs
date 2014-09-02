@@ -42,12 +42,11 @@ namespace SQLitePCL
             return SQLite3RuntimeProvider.sqlite3_win32_set_directory(2, PlatformStorage.Instance.GetTemporaryDirectoryPath());
         }
 
-        int ISQLite3Provider.Sqlite3Open(IntPtr filename, out IntPtr db)
+        int ISQLite3Provider.Sqlite3Open(IntPtr filename, out IntPtr db, int flags)
         {
             long databasePtr;
 
-            // READWRITE|CREATE|URI
-            var result = SQLite3RuntimeProvider.sqlite3_open_v2(filename.ToInt64(), out databasePtr, 0x46, IntPtr.Zero.ToInt64());
+            var result = SQLite3RuntimeProvider.sqlite3_open_v2(filename.ToInt64(), out databasePtr, flags, IntPtr.Zero.ToInt64());
 
             db = new IntPtr(databasePtr);
 

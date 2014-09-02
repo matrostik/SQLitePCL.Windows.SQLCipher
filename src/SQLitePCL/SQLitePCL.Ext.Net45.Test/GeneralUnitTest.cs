@@ -339,6 +339,125 @@ namespace SQLitePCL.Ext.Net45.Test
         }
 
         [TestMethod]
+        public void TestReadOnlyDB()
+        {
+            Exception exception = null;
+            var numRecords = this.rnd.Next(1, 11);
+
+            var insertedRecords = new List<Tuple<int, long, string, double>>(numRecords);
+            var queriedRecords = new List<Tuple<int, long, string, double>>(numRecords);
+
+            for (var i = 0; i < numRecords; i++)
+            {
+                insertedRecords.Add(new Tuple<int, long, string, double>(i, this.GetRandomInteger(), this.GetRandomString(), this.GetRandomReal()));
+            }
+
+            using (var connection = new SQLiteConnection(this.databaseRelativePath, SQLiteOpen.READWRITE))
+            {
+                using (var statement = connection.Prepare("DROP TABLE IF EXISTS TestReadOnlyDB;"))
+                {
+                    statement.Step();
+                }
+
+                using (var statement = connection.Prepare("CREATE TABLE TestReadOnlyDB(id INTEGER, i INTEGER, t TEXT, r REAL);"))
+                {
+                    statement.Step();
+                }
+
+                foreach (var record in insertedRecords)
+                {
+                    var command = "INSERT INTO TestReadOnlyDB(id, i, t, r) VALUES(" + record.Item1.ToString(this.invClt) + "," + record.Item2.ToString(this.invClt)
+                        + ",'" + record.Item3 + "'," + record.Item4.ToString(this.invClt) + ");";
+
+                    using (var statement = connection.Prepare(command))
+                    {
+                        statement.Step();
+                    }
+                }
+            }
+
+            using (var connection = new SQLiteConnection(this.databaseRelativePath, SQLiteOpen.READONLY))
+            {
+                foreach (var record in insertedRecords)
+                {
+                    var command = "SELECT id, i, t, r FROM TestReadOnlyDB WHERE id = " + record.Item1.ToString(this.invClt) + " AND i = " + record.Item2.ToString(this.invClt)
+                        + " AND t = '" + record.Item3 + "' AND r = " + record.Item4.ToString(this.invClt) + ";";
+
+                    using (var statement = connection.Prepare(command))
+                    {
+                        while (statement.Step() == SQLiteResult.ROW)
+                        {
+                            var id = (long)statement[0];
+                            var i = (long)statement[1];
+                            var t = (string)statement[2];
+                            var r = (double)statement[3];
+
+                            queriedRecords.Add(new Tuple<int, long, string, double>((int)id, i, t, r));
+                        }
+                    }
+                }
+
+                using (var statement = connection.Prepare("DROP TABLE TestReadOnlyDB;"))
+                {
+                    var result = statement.Step();
+
+                    if (result == SQLiteResult.READONLY)
+                    {
+                        exception = new SQLiteException(connection.ErrorMessage());
+                    }
+                    else
+                    {
+                        throw new SQLiteException(connection.ErrorMessage());
+                    }
+                }
+            }
+
+            using (var connection = new SQLiteConnection(this.databaseRelativePath, SQLiteOpen.READWRITE))
+            {
+                using (var statement = connection.Prepare("DROP TABLE TestReadOnlyDB;"))
+                {
+                    var result = statement.Step();
+
+                    if (result != SQLiteResult.DONE)
+                    {
+                        throw new SQLiteException(connection.ErrorMessage());
+                    }
+                }
+            }
+
+            Assert.AreEqual(insertedRecords.Count, queriedRecords.Count);
+
+            insertedRecords.Sort((x, y) => { return x.Item1 - y.Item1; });
+            queriedRecords.Sort((x, y) => { return x.Item1 - y.Item1; });
+
+            for (var i = 0; i < insertedRecords.Count; i++)
+            {
+                var insertedRecord = insertedRecords[i];
+                var queriedRecord = queriedRecords[i];
+
+                Assert.AreEqual(insertedRecord.Item1, queriedRecord.Item1);
+                Assert.AreEqual(insertedRecord.Item2, queriedRecord.Item2);
+                Assert.AreEqual(insertedRecord.Item3, queriedRecord.Item3);
+                Assert.IsTrue(Math.Abs(insertedRecord.Item4 - queriedRecord.Item4) <= Math.Abs(insertedRecord.Item4 * 0.0000001));
+            }
+
+            Assert.IsNotNull(exception);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(SQLiteException))]
+        public void TestNonExistingReadOnlyDB()
+        {
+            using (var connection = new SQLiteConnection("nonexisting.db", SQLiteOpen.READONLY))
+            {
+                using (var statement = connection.Prepare("DROP TABLE IF EXISTS TestNonExistingReadOnlyDB;"))
+                {
+                    statement.Step();
+                }
+            }
+        }
+
+        [TestMethod]
         public void TestColumnName()
         {
             using (var connection = new SQLiteConnection(this.databaseRelativePath))

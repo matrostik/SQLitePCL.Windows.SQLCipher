@@ -37,11 +37,16 @@ namespace SQLitePCL
         private IDictionary<Guid, IDictionary<string, object>> aggregateContextDataDic = new Dictionary<Guid, IDictionary<string, object>>();
 
         public SQLiteConnection(string fileName)
-            : this(fileName, true)
+            : this(fileName, SQLiteOpen.READWRITE, true)
         {
         }
 
-        private SQLiteConnection(string fileName, bool setTemporaryDirectory)
+        public SQLiteConnection(string fileName, SQLiteOpen openFlag)
+            : this(fileName, openFlag, true)
+        {
+        }
+
+        private SQLiteConnection(string fileName, SQLiteOpen openFlag, bool setTemporaryDirectory)
         {
             this.platformMarshal = Platform.Instance.PlatformMarshal;
             this.platformStorage = Platform.Instance.PlatformStorage;
@@ -65,9 +70,29 @@ namespace SQLitePCL
 
             var fileNamePtr = this.platformMarshal.MarshalStringManagedToNativeUTF8(localFilePath);
 
+            int flags;
+
+            switch (openFlag)
+            {
+                case SQLiteOpen.READONLY:
+                    // URI|DONTCREATE|READONLY
+                    flags = 0x41;
+                    break;
+                case SQLiteOpen.READWRITE:
+                    // URI|CREATE|READWRITE
+                    flags = 0x46;
+                    break;
+                default:
+                    // URI|CREATE|READWRITE
+                    flags = 0x46;
+                    break;
+            }
+
             try
             {
-                if (this.sqlite3Provider.Sqlite3Open(fileNamePtr, out this.db) != (int)SQLiteResult.OK)
+                var openResult = (SQLiteResult)this.sqlite3Provider.Sqlite3Open(fileNamePtr, out this.db, flags);
+
+                if (openResult != SQLiteResult.OK)
                 {
                     if (this.db != IntPtr.Zero)
                     {
@@ -79,8 +104,10 @@ namespace SQLitePCL
 
                         throw new SQLiteException("Unable to open the database file: " + fileName + " Details: " + errmsg);
                     }
-
-                    throw new SQLiteException("Unable to open the database file: " + fileName);
+                    else
+                    {
+                        throw new SQLiteException("Unable to open the database file: " + fileName + " Details: " + openResult.ToString());
+                    }
                 }
             }
             catch (SQLiteException)

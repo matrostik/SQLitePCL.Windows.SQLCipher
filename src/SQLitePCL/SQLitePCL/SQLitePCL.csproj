@@ -46,6 +46,7 @@
     <Compile Include="Platform\IPlatformMarshal.cs" />
     <Compile Include="Platform\IPlatformStorage.cs" />
     <Compile Include="Platform\ISQLite3Provider.cs" />
+    <Compile Include="SQLiteOpen.cs" />
     <Compile Include="SQLiteStatement.cs" />
     <Compile Include="SQLiteType.cs" />
     <Compile Include="ISQLiteConnection.cs" />
