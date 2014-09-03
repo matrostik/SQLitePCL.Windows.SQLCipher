@@ -74,6 +74,11 @@ namespace SQLitePCL
             return SQLite3RuntimeProvider.sqlite3_create_function(db.ToInt64(), functionName.ToInt64(), numArg, deterministic ? 0x801 : 1, IntPtr.Zero.ToInt64(), func.ToInt64(), IntPtr.Zero.ToInt64(), IntPtr.Zero.ToInt64());
         }
 
+        int ISQLite3Provider.Sqlite3CreateCollation(IntPtr db, IntPtr collationName, IntPtr compare)
+        {
+            return SQLite3RuntimeProvider.sqlite3_create_collation(db.ToInt64(), collationName.ToInt64(), 0x1, IntPtr.Zero.ToInt64(), compare.ToInt64());
+        }
+
         int ISQLite3Provider.Sqlite3CreateAggregate(IntPtr db, IntPtr aggregateName, int numArg, IntPtr step, IntPtr final)
         {
             return SQLite3RuntimeProvider.sqlite3_create_function(db.ToInt64(), aggregateName.ToInt64(), numArg, 1, IntPtr.Zero.ToInt64(), IntPtr.Zero.ToInt64(), step.ToInt64(), final.ToInt64());

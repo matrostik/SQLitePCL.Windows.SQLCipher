@@ -913,6 +913,110 @@ namespace SQLitePCL.Ext.Universal.WindowsStore.Test
         }
 
         [TestMethod]
+        public void TestCollation()
+        {
+            var numRecords = this.rnd.Next(1, 11);
+
+            var insertedRecords = new List<Tuple<int, string>>(numRecords);
+            var queriedRecords = new List<Tuple<int, string>>(numRecords);
+            var queriedRecordsReverse = new List<Tuple<int, string>>(numRecords);
+
+            for (var i = 0; i < numRecords; i++)
+            {
+                insertedRecords.Add(new Tuple<int, string>(i, this.GetRandomString()));
+            }
+
+            using (var connection = new SQLiteConnection(this.databaseRelativePath))
+            {
+                connection.CreateCollation(
+                    "CUSTOMCOLL",
+                    new Collation((first, second) =>
+                    {
+                        return string.Compare(first, second);
+                    }));
+
+                connection.CreateCollation(
+                    "CUSTOMCOLLREVERSE",
+                    new Collation((first, second) =>
+                    {
+                        return string.Compare(second, first);
+                    }));
+
+                using (var statement = connection.Prepare("DROP TABLE IF EXISTS TestCollation;"))
+                {
+                    statement.Step();
+                }
+
+                using (var statement = connection.Prepare("CREATE TABLE TestCollation(id INTEGER, t TEXT);"))
+                {
+                    statement.Step();
+                }
+
+                foreach (var record in insertedRecords)
+                {
+                    var command = "INSERT INTO TestCollation(id, t) VALUES(" + record.Item1.ToString(this.invClt) + ",'" + record.Item2 + "');";
+
+                    using (var statement = connection.Prepare(command))
+                    {
+                        statement.Step();
+                    }
+                }
+
+                using (var statement = connection.Prepare("SELECT id, t FROM TestCollation ORDER BY t COLLATE CUSTOMCOLL, id;"))
+                {
+                    while (statement.Step() == SQLiteResult.ROW)
+                    {
+                        var id = (long)statement[0];
+                        var t = (string)statement[1];
+
+                        queriedRecords.Add(new Tuple<int, string>((int)id, t));
+                    }
+                }
+
+                using (var statement = connection.Prepare("SELECT id, t FROM TestCollation ORDER BY t COLLATE CUSTOMCOLLREVERSE, id;"))
+                {
+                    while (statement.Step() == SQLiteResult.ROW)
+                    {
+                        var id = (long)statement[0];
+                        var t = (string)statement[1];
+
+                        queriedRecordsReverse.Add(new Tuple<int, string>((int)id, t));
+                    }
+                }
+
+                using (var statement = connection.Prepare("DROP TABLE TestCollation;"))
+                {
+                    statement.Step();
+                }
+            }
+
+            Assert.AreEqual(insertedRecords.Count, queriedRecords.Count);
+            Assert.AreEqual(insertedRecords.Count, queriedRecordsReverse.Count);
+
+            insertedRecords.Sort((x, y) => { return string.Compare(x.Item2, y.Item2) != 0 ? string.Compare(x.Item2, y.Item2) : x.Item1 - y.Item1; });
+
+            for (var i = 0; i < insertedRecords.Count; i++)
+            {
+                var insertedRecord = insertedRecords[i];
+                var queriedRecord = queriedRecords[i];
+
+                Assert.AreEqual(insertedRecord.Item1, queriedRecord.Item1);
+                Assert.AreEqual(insertedRecord.Item2, queriedRecord.Item2);
+            }
+
+            insertedRecords.Sort((x, y) => { return string.Compare(y.Item2, x.Item2) != 0 ? string.Compare(y.Item2, x.Item2) : x.Item1 - y.Item1; });
+
+            for (var i = 0; i < insertedRecords.Count; i++)
+            {
+                var insertedRecord = insertedRecords[i];
+                var queriedRecord = queriedRecordsReverse[i];
+
+                Assert.AreEqual(insertedRecord.Item1, queriedRecord.Item1);
+                Assert.AreEqual(insertedRecord.Item2, queriedRecord.Item2);
+            }
+        }
+
+        [TestMethod]
         public void TestBindParameter()
         {
             var numRecords = this.rnd.Next(1, 11);

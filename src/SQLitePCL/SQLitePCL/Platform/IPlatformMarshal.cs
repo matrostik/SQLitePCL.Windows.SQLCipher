@@ -17,6 +17,8 @@ namespace SQLitePCL
 
     public delegate void AggregateFinalNative(IntPtr context);
 
+    public delegate int CollationNative(IntPtr applicationData, int firstLength, IntPtr firstString, int secondLength, IntPtr secondString);
+
     /// <summary>
     /// An interface for platform-specific assemblies to implement to support 
     /// Marshaling operations.
@@ -38,6 +40,8 @@ namespace SQLitePCL
         Delegate ApplyNativeCallingConventionToAggregateStep(AggregateStepNative step);
 
         Delegate ApplyNativeCallingConventionToAggregateFinal(AggregateFinalNative final);
+
+        Delegate ApplyNativeCallingConventionToCollation(CollationNative collation);
 
         IntPtr MarshalDelegateToNativeFunctionPointer(Delegate del);
 

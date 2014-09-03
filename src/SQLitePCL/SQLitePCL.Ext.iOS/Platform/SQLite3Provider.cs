@@ -79,6 +79,15 @@ namespace SQLitePCL
             return NativeMethods.sqlite3_create_function(db, aggregateName, numArg, 1, userData, IntPtr.Zero, proxyStep, proxyFinal);
         }
 
+        int ISQLite3Provider.Sqlite3CreateCollation(IntPtr db, IntPtr collationName, IntPtr compare)
+        {
+            var proxyCollation = Marshal.GetFunctionPointerForDelegate(new CollationNativeCdecl(Sqlite3CollationMarshallingProxy.CollationNativeCdeclProxy));
+
+            var applicationData = new Sqlite3CollationMarshallingProxy(db, collationName, compare).GuidHandlePtr;
+
+            return NativeMethods.sqlite3_create_collation(db, collationName, 0x1, applicationData, proxyCollation);
+        }
+
         long ISQLite3Provider.Sqlite3LastInsertRowId(IntPtr db)
         {
             return NativeMethods.sqlite3_last_insert_rowid(db);
@@ -440,6 +449,96 @@ namespace SQLitePCL
             }
         }
 
+        private struct Sqlite3CollationMarshallingProxy
+        {
+            private static IDictionary<Guid, Sqlite3CollationMarshallingProxy> instanceByGuidDic = new Dictionary<Guid, Sqlite3CollationMarshallingProxy>();
+
+            private static IDictionary<long, IDictionary<string, Guid>> guidByDbCollDic = new Dictionary<long, IDictionary<string, Guid>>();
+
+            // collations
+            private readonly CollationNativeCdecl invoke;
+
+            private readonly Guid guid;
+            private readonly GCHandle guidHandle;
+
+            internal Sqlite3CollationMarshallingProxy(IntPtr db, IntPtr collationName, IntPtr invoke)
+            {
+                var invokeCollation = GCHandle.FromIntPtr(invoke);
+                this.invoke = invokeCollation.Target as CollationNativeCdecl;
+                invokeCollation.Free();
+
+                this.guid = Guid.NewGuid();
+                this.guidHandle = GCHandle.Alloc(this.guid, GCHandleType.Pinned);
+
+                this.RegisterInstance(db, collationName);
+            }
+
+            internal IntPtr GuidHandlePtr
+            {
+                get
+                {
+                    return GCHandle.ToIntPtr(this.guidHandle);
+                }
+            }
+
+            [MonoPInvokeCallback(typeof(CollationNativeCdecl))]
+            internal static int CollationNativeCdeclProxy(IntPtr applicationData, int firstLength, IntPtr firstString, int secondLength, IntPtr secondString)
+            {
+                var guidHandle = GCHandle.FromIntPtr(applicationData);
+                var proxy = Sqlite3CollationMarshallingProxy.instanceByGuidDic[(Guid)guidHandle.Target];
+
+                // Invoke it
+                return proxy.invoke(applicationData, firstLength, firstString, secondLength, secondString);
+            }
+
+            internal static void ReleaseProxies(IntPtr db)
+            {
+                IDictionary<string, Guid> guidByColl;
+
+                if (guidByDbCollDic.TryGetValue(db.ToInt64(), out guidByColl))
+                {
+                    foreach (var oldGuid in guidByColl.Values)
+                    {
+                        instanceByGuidDic[oldGuid].guidHandle.Free();
+                        instanceByGuidDic.Remove(oldGuid);
+                    }
+
+                    guidByDbCollDic.Remove(db.ToInt64());
+                }
+            }
+
+            private void RegisterInstance(IntPtr db, IntPtr collationName)
+            {
+                var collName = PlatformMarshal.Instance.MarshalStringNativeUTF8ToManaged(collationName);
+
+                IDictionary<string, Guid> guidByColl;
+
+                if (guidByDbCollDic.TryGetValue(db.ToInt64(), out guidByColl))
+                {
+                    Guid oldGuid;
+
+                    if (guidByColl.TryGetValue(collName, out oldGuid))
+                    {
+                        instanceByGuidDic[oldGuid].guidHandle.Free();
+                        instanceByGuidDic.Remove(oldGuid);
+                        guidByColl[collName] = this.guid;
+                    }
+                    else
+                    {
+                        guidByColl.Add(collName, this.guid);
+                    }
+                }
+                else
+                {
+                    guidByColl = new Dictionary<string, Guid>();
+                    guidByColl.Add(collName, this.guid);
+                    guidByDbCollDic.Add(db.ToInt64(), guidByColl);
+                }
+
+                instanceByGuidDic.Add(this.guid, this);
+            }
+        }
+
         private static class NativeMethods
         {
             [DllImport("sqlite3", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_open")]
@@ -456,6 +555,9 @@ namespace SQLitePCL
 
             [DllImport("sqlite3", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_create_function")]
             internal static extern int sqlite3_create_function(IntPtr db, IntPtr functionName, int nArg, int p, IntPtr intPtr1, IntPtr func, IntPtr intPtr2, IntPtr intPtr3);
+
+            [DllImport("sqlite3", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_create_collation")]
+            internal static extern int sqlite3_create_collation(IntPtr db, IntPtr collationName, int textRep, IntPtr app, IntPtr compare);
 
             [DllImport("sqlite3", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_last_insert_rowid")]
             internal static extern long sqlite3_last_insert_rowid(IntPtr db);

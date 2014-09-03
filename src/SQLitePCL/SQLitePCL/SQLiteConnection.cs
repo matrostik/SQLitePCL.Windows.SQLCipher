@@ -36,6 +36,8 @@ namespace SQLitePCL
 
         private IDictionary<Guid, IDictionary<string, object>> aggregateContextDataDic = new Dictionary<Guid, IDictionary<string, object>>();
 
+        private IDictionary<string, Delegate> collationDelegates = new Dictionary<string, Delegate>();
+
         public SQLiteConnection(string fileName)
             : this(fileName, SQLiteOpen.READWRITE, true)
         {
@@ -298,6 +300,46 @@ namespace SQLitePCL
             try
             {
                 this.sqlite3Provider.Sqlite3CreateAggregate(this.db, namePtr, numberOfArguments, aggregateStepPtr, aggregateFinalPtr);
+            }
+            finally
+            {
+                if (namePtr != IntPtr.Zero)
+                {
+                    this.platformMarshal.CleanUpStringNativeUTF8(namePtr);
+                }
+            }
+        }
+
+        public void CreateCollation(string name, Collation collation)
+        {
+            name = name.ToUpperInvariant();
+
+            var nativeCollation = new CollationNative((applicationData, firstLength, firstString, secondLength, secondString) =>
+            {
+                var first = this.platformMarshal.MarshalStringNativeUTF8ToManaged(firstString);
+                var second = this.platformMarshal.MarshalStringNativeUTF8ToManaged(secondString);
+
+                try
+                {
+                    return collation.Invoke(first, second);
+                }
+                catch
+                {
+                    return 0;
+                }
+            });
+
+            var collationDelegate = this.platformMarshal.ApplyNativeCallingConventionToCollation(nativeCollation);
+            this.collationDelegates[name] = collationDelegate;
+
+            var collPtr = this.platformMarshal.MarshalDelegateToNativeFunctionPointer(collationDelegate);
+
+            int nameLength;
+            var namePtr = this.platformMarshal.MarshalStringManagedToNativeUTF8(name, out nameLength);
+
+            try
+            {
+                this.sqlite3Provider.Sqlite3CreateCollation(this.db, namePtr, collPtr);
             }
             finally
             {

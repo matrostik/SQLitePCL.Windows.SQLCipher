@@ -33,6 +33,8 @@ namespace SQLitePCL
 
 					static int32 sqlite3_create_function(int64 db, int64 zFunctionName, int32 nArg, int32 eTextRep, int64 pApp, int64 xFunc, int64 xStep, int64 xFinal);
 
+					static int32 sqlite3_create_collation(int64 db, int64 zName, int32 eTextRep, int64 pArg, int64 xCompare);
+
 					static int64 sqlite3_last_insert_rowid(int64 db);
 
 					static int64 sqlite3_errmsg(int64 db);

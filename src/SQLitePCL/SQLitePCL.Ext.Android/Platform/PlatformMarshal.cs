@@ -22,6 +22,9 @@ namespace SQLitePCL
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate void AggregateFinalNativeCdecl(IntPtr context);
 
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    internal delegate int CollationNativeCdecl(IntPtr applicationData, int firstLength, IntPtr firstString, int secondLength, IntPtr secondString);
+
     /// <summary>
     /// Implements the <see cref="IPlatformMarshal"/> interface for Xamarin Android.
     /// </summary>
@@ -111,17 +114,22 @@ namespace SQLitePCL
 
         Delegate IPlatformMarshal.ApplyNativeCallingConventionToFunction(FunctionNative function)
         {
-            return new FunctionNativeCdecl((context, numberOfArguments, arguments) => { function.Invoke(context, numberOfArguments, arguments); });
+            return new FunctionNativeCdecl(function);
         }
 
         Delegate IPlatformMarshal.ApplyNativeCallingConventionToAggregateStep(AggregateStepNative step)
         {
-            return new AggregateStepNativeCdecl((context, numberOfArguments, arguments) => { step.Invoke(context, numberOfArguments, arguments); });
+            return new AggregateStepNativeCdecl(step);
         }
 
         Delegate IPlatformMarshal.ApplyNativeCallingConventionToAggregateFinal(AggregateFinalNative final)
         {
-            return new AggregateFinalNativeCdecl((context) => { final.Invoke(context); });
+            return new AggregateFinalNativeCdecl(final);
+        }
+
+        Delegate IPlatformMarshal.ApplyNativeCallingConventionToCollation(CollationNative collation)
+        {
+            return new CollationNativeCdecl(collation);
         }
 
         IntPtr IPlatformMarshal.MarshalDelegateToNativeFunctionPointer(Delegate del)

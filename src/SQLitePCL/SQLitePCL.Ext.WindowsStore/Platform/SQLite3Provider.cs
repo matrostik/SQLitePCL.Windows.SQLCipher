@@ -67,6 +67,11 @@ namespace SQLitePCL
             return NativeMethods.sqlite3_create_function(db, aggregateName, numArg, 1, IntPtr.Zero, IntPtr.Zero, step, final);
         }
 
+        int ISQLite3Provider.Sqlite3CreateCollation(IntPtr db, IntPtr collationName, IntPtr compare)
+        {
+            return NativeMethods.sqlite3_create_collation(db, collationName, 0x1, IntPtr.Zero, compare);
+        }
+
         long ISQLite3Provider.Sqlite3LastInsertRowId(IntPtr db)
         {
             return NativeMethods.sqlite3_last_insert_rowid(db);
@@ -301,6 +306,9 @@ namespace SQLitePCL
 
             [DllImport("sqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_create_function")]
             internal static extern int sqlite3_create_function(IntPtr db, IntPtr functionName, int nArg, int p, IntPtr intPtr1, IntPtr func, IntPtr intPtr2, IntPtr intPtr3);
+
+            [DllImport("sqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_create_collation")]
+            internal static extern int sqlite3_create_collation(IntPtr db, IntPtr collationName, int textRep, IntPtr app, IntPtr compare);
 
             [DllImport("sqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_last_insert_rowid")]
             internal static extern long sqlite3_last_insert_rowid(IntPtr db);

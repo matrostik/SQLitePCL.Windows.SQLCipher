@@ -18,6 +18,8 @@ namespace SQLitePCL
 
     public delegate object AggregateFinal(IDictionary<string, object> aggregateContextData);
 
+    public delegate int Collation(string first, string second);
+
     public interface ISQLiteConnection : IDisposable
     {
         ISQLiteStatement Prepare(string sql);
@@ -25,6 +27,8 @@ namespace SQLitePCL
         void CreateFunction(string name, int numberOfArguments, Function function, bool deterministic);
 
         void CreateAggregate(string name, int numberOfArguments, AggregateStep step, AggregateFinal final);
+
+        void CreateCollation(string name, Collation collation);
 
         long LastInsertRowId();
 

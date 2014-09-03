@@ -28,6 +28,8 @@ namespace SQLitePCL
 
         int Sqlite3CreateAggregate(IntPtr db, IntPtr aggregateName, int numArg, IntPtr step, IntPtr final);
 
+        int Sqlite3CreateCollation(IntPtr db, IntPtr collationName, IntPtr compare);
+
         long Sqlite3LastInsertRowId(IntPtr context);
 
         IntPtr Sqlite3Errmsg(IntPtr db);

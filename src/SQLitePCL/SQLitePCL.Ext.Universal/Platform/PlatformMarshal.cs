@@ -22,6 +22,9 @@ namespace SQLitePCL
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate void AggregateFinalNativeCdecl(IntPtr context);
 
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    internal delegate int CollationNativeCdecl(IntPtr applicationData, int firstLength, IntPtr firstString, int secondLength, IntPtr secondString);
+
     /// <summary>
     /// Implements the <see cref="IPlatformMarshal"/> interface for Windows Store.
     /// </summary>
@@ -121,6 +124,11 @@ namespace SQLitePCL
         Delegate IPlatformMarshal.ApplyNativeCallingConventionToAggregateFinal(AggregateFinalNative final)
         {
             return new AggregateFinalNativeCdecl(final);
+        }
+
+        Delegate IPlatformMarshal.ApplyNativeCallingConventionToCollation(CollationNative collation)
+        {
+            return new CollationNativeCdecl(collation);
         }
 
         IntPtr IPlatformMarshal.MarshalDelegateToNativeFunctionPointer(Delegate del)

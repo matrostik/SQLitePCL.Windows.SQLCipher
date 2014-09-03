@@ -72,6 +72,11 @@ int32 SQLite3RuntimeProvider::sqlite3_create_function(int64 db, int64 zFunctionN
 	return ::sqlite3_create_function((sqlite3*)db, (const char*)zFunctionName, nArg, eTextRep, (void*)pApp, (void(*)(sqlite3_context*, int, sqlite3_value**))xFunc, (void(*)(sqlite3_context*, int, sqlite3_value**))xStep, (void(*)(sqlite3_context*))xFinal);
 }
 
+int32 SQLite3RuntimeProvider::sqlite3_create_collation(int64 db, int64 zName, int32 eTextRep, int64 pArg, int64 xCompare)
+{
+	return ::sqlite3_create_collation((sqlite3*)db, (const char*)zName, eTextRep, (void*)pArg, (int(*)(void*, int, const void*, int, const void*))xCompare);
+}
+
 int64 SQLite3RuntimeProvider::sqlite3_last_insert_rowid(int64 db)
 {
 	return (int64)::sqlite3_last_insert_rowid((sqlite3*)db);
