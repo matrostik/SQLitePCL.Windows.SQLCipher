@@ -368,6 +368,23 @@ namespace SQLitePCL
             }
         }
 
+        public int ChangesCount()
+        {
+            try
+            {
+                return sqlite3Provider.Sqlite3Changes(this.db);
+
+            }
+            catch (SQLiteException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new SQLiteException("Unable to retrieve the changes count.", ex);
+            }
+        }
+
         public string ErrorMessage()
         {
             try
