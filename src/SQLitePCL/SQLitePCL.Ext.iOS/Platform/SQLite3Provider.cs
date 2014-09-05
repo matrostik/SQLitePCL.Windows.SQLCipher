@@ -303,6 +303,11 @@ namespace SQLitePCL
             return NativeMethods.sqlite3_aggregate_context(context, length);
         }
 
+        int ISQLite3Provider.Sqlite3Changes(IntPtr db)
+        {
+            return NativeMethods.sqlite3_changes(db);
+        }
+
         // unwrap the result of MarshalDelegateToNativeFunctionPointer as we are
         // not going to be using this pointer, but rather the pointer to this 
         // object, which will contain the references to the function that the 
@@ -690,6 +695,9 @@ namespace SQLitePCL
 
             [DllImport("sqlite3", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_aggregate_context")]
             internal static extern IntPtr sqlite3_aggregate_context(IntPtr context, int length);
+
+            [DllImport("sqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_changes")]
+            internal static extern int sqlite3_changes(IntPtr db);
         }
     }
 }

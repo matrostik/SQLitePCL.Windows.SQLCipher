@@ -287,6 +287,11 @@ namespace SQLitePCL
             return NativeMethods.sqlite3_aggregate_context(context, length);
         }
 
+        int ISQLite3Provider.Sqlite3Changes(IntPtr db)
+        {
+            return NativeMethods.sqlite3_changes(db);
+        }
+
         private static class NativeMethods
         {
             [DllImport("sqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_open")]
@@ -435,6 +440,9 @@ namespace SQLitePCL
 
             [DllImport("sqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_aggregate_context")]
             internal static extern IntPtr sqlite3_aggregate_context(IntPtr context, int length);
+
+            [DllImport("sqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_changes")]
+            internal static extern int sqlite3_changes(IntPtr db);
         }
     }
 }

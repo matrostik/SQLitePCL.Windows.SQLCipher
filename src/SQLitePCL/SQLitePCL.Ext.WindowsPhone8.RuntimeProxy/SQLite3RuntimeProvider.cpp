@@ -291,3 +291,8 @@ int64 SQLite3RuntimeProvider::sqlite3_aggregate_context(int64 context, int32 len
 {
 	return (int64)::sqlite3_aggregate_context((sqlite3_context*)context, length);
 }
+
+int32 SQLite3RuntimeProvider::sqlite3_changes(int64 db)
+{
+	return ::sqlite3_changes((sqlite3*)db);
+}

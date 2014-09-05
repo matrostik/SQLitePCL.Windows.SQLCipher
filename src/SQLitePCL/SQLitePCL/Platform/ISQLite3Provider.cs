@@ -115,5 +115,8 @@ namespace SQLitePCL
         void Sqlite3ResultError(IntPtr context, IntPtr value, int length);
 
         IntPtr Sqlite3AggregateContext(IntPtr context, int length);
+
+        int Sqlite3Changes(IntPtr db);
+
     }
 }
