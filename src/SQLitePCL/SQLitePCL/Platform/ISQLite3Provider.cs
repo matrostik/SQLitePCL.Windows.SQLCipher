@@ -117,6 +117,5 @@ namespace SQLitePCL
         IntPtr Sqlite3AggregateContext(IntPtr context, int length);
 
         int Sqlite3Changes(IntPtr db);
-
     }
 }
