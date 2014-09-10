@@ -442,7 +442,7 @@ namespace SQLitePCL
             [DllImport("sqlite3", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_aggregate_context")]
             internal static extern IntPtr sqlite3_aggregate_context(IntPtr context, int length);
 
-            [DllImport("sqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_changes")]
+            [DllImport("sqlite3", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_changes")]
             internal static extern int sqlite3_changes(IntPtr db);
         }
     }
