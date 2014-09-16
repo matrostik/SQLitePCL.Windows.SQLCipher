@@ -1545,7 +1545,6 @@ namespace SQLitePCL.Ext.WindowsStore.Test
             }
         }
 
-
         [TestMethod]
         public void TestChangesCount()
         {
@@ -1596,7 +1595,6 @@ namespace SQLitePCL.Ext.WindowsStore.Test
 
             Assert.AreEqual(0, initialChangesCount);
             Assert.AreEqual(insertedRecords.Count, insertChangesCount);
-
         }
 
         [TestMethod]
@@ -1763,7 +1761,6 @@ namespace SQLitePCL.Ext.WindowsStore.Test
                 Assert.IsTrue(Math.Abs(insertedRecord.Item4 - queriedRecord.Item4) <= Math.Abs(insertedRecord.Item4 * 0.0000001));
             }
         }
-
 
         private static object StaticFunction(object[] arguments)
         {

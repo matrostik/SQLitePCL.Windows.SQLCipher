@@ -1538,8 +1538,6 @@ namespace SQLitePCL.Ext.IOS.Test
             }
         }
 
-
-
         [TestMethod]
         public void TestChangesCount()
         {
@@ -1590,7 +1588,6 @@ namespace SQLitePCL.Ext.IOS.Test
 
             Assert.AreEqual(0, initialChangesCount);
             Assert.AreEqual(insertedRecords.Count, insertChangesCount);
-
         }
 
         [TestMethod]
@@ -1757,6 +1754,7 @@ namespace SQLitePCL.Ext.IOS.Test
                 Assert.IsTrue(Math.Abs(insertedRecord.Item4 - queriedRecord.Item4) <= Math.Abs(insertedRecord.Item4 * 0.0000001));
             }
         }
+
         private static object StaticFunction(object[] arguments)
         {
             return (long)arguments[0] + (long)arguments[1];

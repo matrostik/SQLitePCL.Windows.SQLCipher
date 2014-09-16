@@ -298,10 +298,10 @@ namespace SQLitePCL
         {
             return new IntPtr(SQLite3RuntimeProvider.sqlite3_aggregate_context(context.ToInt64(), length));
         }
+
         int ISQLite3Provider.Sqlite3Changes(IntPtr db)
         {
             return SQLite3RuntimeProvider.sqlite3_changes(db.ToInt64());
         }
-
     }
 }

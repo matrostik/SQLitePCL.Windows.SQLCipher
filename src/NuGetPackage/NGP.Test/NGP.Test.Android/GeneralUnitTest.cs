@@ -342,6 +342,125 @@ namespace NGP.Test.Android
         }
 
         [TestMethod]
+        public void TestReadOnlyDB()
+        {
+            Exception exception = null;
+            var numRecords = this.rnd.Next(1, 11);
+
+            var insertedRecords = new List<Tuple<int, long, string, double>>(numRecords);
+            var queriedRecords = new List<Tuple<int, long, string, double>>(numRecords);
+
+            for (var i = 0; i < numRecords; i++)
+            {
+                insertedRecords.Add(new Tuple<int, long, string, double>(i, this.GetRandomInteger(), this.GetRandomString(), this.GetRandomReal()));
+            }
+
+            using (var connection = new SQLiteConnection(this.databaseRelativePath, SQLiteOpen.READWRITE))
+            {
+                using (var statement = connection.Prepare("DROP TABLE IF EXISTS TestReadOnlyDB;"))
+                {
+                    statement.Step();
+                }
+
+                using (var statement = connection.Prepare("CREATE TABLE TestReadOnlyDB(id INTEGER, i INTEGER, t TEXT, r REAL);"))
+                {
+                    statement.Step();
+                }
+
+                foreach (var record in insertedRecords)
+                {
+                    var command = "INSERT INTO TestReadOnlyDB(id, i, t, r) VALUES(" + record.Item1.ToString(this.invClt) + "," + record.Item2.ToString(this.invClt)
+                        + ",'" + record.Item3 + "'," + record.Item4.ToString(this.invClt) + ");";
+
+                    using (var statement = connection.Prepare(command))
+                    {
+                        statement.Step();
+                    }
+                }
+            }
+
+            using (var connection = new SQLiteConnection(this.databaseRelativePath, SQLiteOpen.READONLY))
+            {
+                foreach (var record in insertedRecords)
+                {
+                    var command = "SELECT id, i, t, r FROM TestReadOnlyDB WHERE id = " + record.Item1.ToString(this.invClt) + " AND i = " + record.Item2.ToString(this.invClt)
+                        + " AND t = '" + record.Item3 + "' AND r = " + record.Item4.ToString(this.invClt) + ";";
+
+                    using (var statement = connection.Prepare(command))
+                    {
+                        while (statement.Step() == SQLiteResult.ROW)
+                        {
+                            var id = (long)statement[0];
+                            var i = (long)statement[1];
+                            var t = (string)statement[2];
+                            var r = (double)statement[3];
+
+                            queriedRecords.Add(new Tuple<int, long, string, double>((int)id, i, t, r));
+                        }
+                    }
+                }
+
+                using (var statement = connection.Prepare("DROP TABLE TestReadOnlyDB;"))
+                {
+                    var result = statement.Step();
+
+                    if (result == SQLiteResult.READONLY)
+                    {
+                        exception = new SQLiteException(connection.ErrorMessage());
+                    }
+                    else
+                    {
+                        throw new SQLiteException(connection.ErrorMessage());
+                    }
+                }
+            }
+
+            using (var connection = new SQLiteConnection(this.databaseRelativePath, SQLiteOpen.READWRITE))
+            {
+                using (var statement = connection.Prepare("DROP TABLE TestReadOnlyDB;"))
+                {
+                    var result = statement.Step();
+
+                    if (result != SQLiteResult.DONE)
+                    {
+                        throw new SQLiteException(connection.ErrorMessage());
+                    }
+                }
+            }
+
+            Assert.AreEqual(insertedRecords.Count, queriedRecords.Count);
+
+            insertedRecords.Sort((x, y) => { return x.Item1 - y.Item1; });
+            queriedRecords.Sort((x, y) => { return x.Item1 - y.Item1; });
+
+            for (var i = 0; i < insertedRecords.Count; i++)
+            {
+                var insertedRecord = insertedRecords[i];
+                var queriedRecord = queriedRecords[i];
+
+                Assert.AreEqual(insertedRecord.Item1, queriedRecord.Item1);
+                Assert.AreEqual(insertedRecord.Item2, queriedRecord.Item2);
+                Assert.AreEqual(insertedRecord.Item3, queriedRecord.Item3);
+                Assert.IsTrue(Math.Abs(insertedRecord.Item4 - queriedRecord.Item4) <= Math.Abs(insertedRecord.Item4 * 0.0000001));
+            }
+
+            Assert.IsNotNull(exception);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(SQLiteException))]
+        public void TestNonExistingReadOnlyDB()
+        {
+            using (var connection = new SQLiteConnection("nonexisting.db", SQLiteOpen.READONLY))
+            {
+                using (var statement = connection.Prepare("DROP TABLE IF EXISTS TestNonExistingReadOnlyDB;"))
+                {
+                    statement.Step();
+                }
+            }
+        }
+
+        [TestMethod]
         public void TestColumnName()
         {
             using (var connection = new SQLiteConnection(this.databaseRelativePath))
@@ -784,6 +903,110 @@ namespace NGP.Test.Android
                 {
                     statement.Step();
                 }
+            }
+        }
+
+        [TestMethod]
+        public void TestCollation()
+        {
+            var numRecords = this.rnd.Next(1, 11);
+
+            var insertedRecords = new List<Tuple<int, string>>(numRecords);
+            var queriedRecords = new List<Tuple<int, string>>(numRecords);
+            var queriedRecordsReverse = new List<Tuple<int, string>>(numRecords);
+
+            for (var i = 0; i < numRecords; i++)
+            {
+                insertedRecords.Add(new Tuple<int, string>(i, this.GetRandomString()));
+            }
+
+            using (var connection = new SQLiteConnection(this.databaseRelativePath))
+            {
+                connection.CreateCollation(
+                    "CUSTOMCOLL",
+                    new Collation((first, second) =>
+                    {
+                        return string.Compare(first, second);
+                    }));
+
+                connection.CreateCollation(
+                    "CUSTOMCOLLREVERSE",
+                    new Collation((first, second) =>
+                    {
+                        return string.Compare(second, first);
+                    }));
+
+                using (var statement = connection.Prepare("DROP TABLE IF EXISTS TestCollation;"))
+                {
+                    statement.Step();
+                }
+
+                using (var statement = connection.Prepare("CREATE TABLE TestCollation(id INTEGER, t TEXT);"))
+                {
+                    statement.Step();
+                }
+
+                foreach (var record in insertedRecords)
+                {
+                    var command = "INSERT INTO TestCollation(id, t) VALUES(" + record.Item1.ToString(this.invClt) + ",'" + record.Item2 + "');";
+
+                    using (var statement = connection.Prepare(command))
+                    {
+                        statement.Step();
+                    }
+                }
+
+                using (var statement = connection.Prepare("SELECT id, t FROM TestCollation ORDER BY t COLLATE CUSTOMCOLL, id;"))
+                {
+                    while (statement.Step() == SQLiteResult.ROW)
+                    {
+                        var id = (long)statement[0];
+                        var t = (string)statement[1];
+
+                        queriedRecords.Add(new Tuple<int, string>((int)id, t));
+                    }
+                }
+
+                using (var statement = connection.Prepare("SELECT id, t FROM TestCollation ORDER BY t COLLATE CUSTOMCOLLREVERSE, id;"))
+                {
+                    while (statement.Step() == SQLiteResult.ROW)
+                    {
+                        var id = (long)statement[0];
+                        var t = (string)statement[1];
+
+                        queriedRecordsReverse.Add(new Tuple<int, string>((int)id, t));
+                    }
+                }
+
+                using (var statement = connection.Prepare("DROP TABLE TestCollation;"))
+                {
+                    statement.Step();
+                }
+            }
+
+            Assert.AreEqual(insertedRecords.Count, queriedRecords.Count);
+            Assert.AreEqual(insertedRecords.Count, queriedRecordsReverse.Count);
+
+            insertedRecords.Sort((x, y) => { return string.Compare(x.Item2, y.Item2) != 0 ? string.Compare(x.Item2, y.Item2) : x.Item1 - y.Item1; });
+
+            for (var i = 0; i < insertedRecords.Count; i++)
+            {
+                var insertedRecord = insertedRecords[i];
+                var queriedRecord = queriedRecords[i];
+
+                Assert.AreEqual(insertedRecord.Item1, queriedRecord.Item1);
+                Assert.AreEqual(insertedRecord.Item2, queriedRecord.Item2);
+            }
+
+            insertedRecords.Sort((x, y) => { return string.Compare(y.Item2, x.Item2) != 0 ? string.Compare(y.Item2, x.Item2) : x.Item1 - y.Item1; });
+
+            for (var i = 0; i < insertedRecords.Count; i++)
+            {
+                var insertedRecord = insertedRecords[i];
+                var queriedRecord = queriedRecordsReverse[i];
+
+                Assert.AreEqual(insertedRecord.Item1, queriedRecord.Item1);
+                Assert.AreEqual(insertedRecord.Item2, queriedRecord.Item2);
             }
         }
 
@@ -1313,6 +1536,223 @@ namespace NGP.Test.Android
                 {
                     statement.Step();
                 }
+            }
+        }
+
+        [TestMethod]
+        public void TestChangesCount()
+        {
+            var initialChangesCount = 0;
+            var insertChangesCount = 0;
+
+            var numRecords = this.rnd.Next(1, 11);
+
+            var insertedRecords = new List<Tuple<int, long, string, double>>(numRecords);
+
+            for (var i = 0; i < numRecords; i++)
+            {
+                insertedRecords.Add(new Tuple<int, long, string, double>(i, this.GetRandomInteger(), this.GetRandomString(), this.GetRandomReal()));
+            }
+
+            using (var connection = new SQLiteConnection(this.databaseRelativePath))
+            {
+                using (var statement = connection.Prepare("DROP TABLE IF EXISTS TestChangesCount;"))
+                {
+                    statement.Step();
+                }
+
+                using (var statement = connection.Prepare("CREATE TABLE TestChangesCount(id INTEGER, i INTEGER, t TEXT, r REAL);"))
+                {
+                    statement.Step();
+                }
+
+                initialChangesCount = connection.ChangesCount();
+
+                foreach (var record in insertedRecords)
+                {
+                    var command = "INSERT INTO TestChangesCount(id, i, t, r) VALUES(" + record.Item1.ToString(this.invClt) + "," + record.Item2.ToString(this.invClt)
+                        + ",'" + record.Item3 + "'," + record.Item4.ToString(this.invClt) + ");";
+
+                    using (var statement = connection.Prepare(command))
+                    {
+                        statement.Step();
+                    }
+
+                    insertChangesCount += connection.ChangesCount();
+                }
+
+                using (var statement = connection.Prepare("DROP TABLE TestChangesCount;"))
+                {
+                    statement.Step();
+                }
+            }
+
+            Assert.AreEqual(0, initialChangesCount);
+            Assert.AreEqual(insertedRecords.Count, insertChangesCount);
+        }
+
+        [TestMethod]
+        public void TestTransactionRollbackSupport()
+        {
+            var numRecords = this.rnd.Next(1, 11);
+
+            var insertedRecords = new List<Tuple<int, long, string, double>>(numRecords);
+            var queriedRecords = 0;
+
+            for (var i = 0; i < numRecords; i++)
+            {
+                insertedRecords.Add(new Tuple<int, long, string, double>(i, this.GetRandomInteger(), this.GetRandomString(), this.GetRandomReal()));
+            }
+
+            using (var connection = new SQLiteConnection(this.databaseRelativePath))
+            {
+                using (var statement = connection.Prepare("DROP TABLE IF EXISTS TestTransactionRollbackSupport;"))
+                {
+                    statement.Step();
+                }
+
+                using (var statement = connection.Prepare("CREATE TABLE TestTransactionRollbackSupport(id INTEGER, i INTEGER, t TEXT, r REAL);"))
+                {
+                    statement.Step();
+                }
+
+                var beginTransactionCommand = "BEGIN TRANSACTION";
+
+                using (var statement = connection.Prepare(beginTransactionCommand))
+                {
+                    statement.Step();
+                }
+
+                foreach (var record in insertedRecords)
+                {
+                    var command = "INSERT INTO TestTransactionRollbackSupport(id, i, t, r) VALUES(" + record.Item1.ToString(this.invClt) + "," + record.Item2.ToString(this.invClt)
+                        + ",'" + record.Item3 + "'," + record.Item4.ToString(this.invClt) + ");";
+
+                    using (var statement = connection.Prepare(command))
+                    {
+                        statement.Step();
+                    }
+                }
+
+                var rollbackTransactionCommand = "ROLLBACK TRANSACTION";
+
+                using (var statement = connection.Prepare(rollbackTransactionCommand))
+                {
+                    statement.Step();
+                }
+
+                foreach (var record in insertedRecords)
+                {
+                    var command = "SELECT id, i, t, r FROM TestTransactionRollbackSupport WHERE id = " + record.Item1.ToString(this.invClt) + " AND i = " + record.Item2.ToString(this.invClt)
+                        + " AND t = '" + record.Item3 + "' AND r = " + record.Item4.ToString(this.invClt) + ";";
+
+                    using (var statement = connection.Prepare(command))
+                    {
+                        while (statement.Step() == SQLiteResult.ROW)
+                        {
+                            queriedRecords++;
+                        }
+                    }
+                }
+
+                using (var statement = connection.Prepare("DROP TABLE TestTransactionRollbackSupport;"))
+                {
+                    statement.Step();
+                }
+            }
+
+            Assert.AreEqual(0, queriedRecords);
+        }
+
+        [TestMethod]
+        public void TestTransactionCommitSupport()
+        {
+            var numRecords = this.rnd.Next(1, 11);
+
+            var insertedRecords = new List<Tuple<int, long, string, double>>(numRecords);
+            var queriedRecords = new List<Tuple<int, long, string, double>>(numRecords);
+
+            for (var i = 0; i < numRecords; i++)
+            {
+                insertedRecords.Add(new Tuple<int, long, string, double>(i, this.GetRandomInteger(), this.GetRandomString(), this.GetRandomReal()));
+            }
+
+            using (var connection = new SQLiteConnection(this.databaseRelativePath))
+            {
+                using (var statement = connection.Prepare("DROP TABLE IF EXISTS TestTransactionCommitSupport;"))
+                {
+                    statement.Step();
+                }
+
+                using (var statement = connection.Prepare("CREATE TABLE TestTransactionCommitSupport(id INTEGER, i INTEGER, t TEXT, r REAL);"))
+                {
+                    statement.Step();
+                }
+
+                var beginTransactionCommand = "BEGIN TRANSACTION";
+
+                using (var statement = connection.Prepare(beginTransactionCommand))
+                {
+                    statement.Step();
+                }
+
+                foreach (var record in insertedRecords)
+                {
+                    var command = "INSERT INTO TestTransactionCommitSupport(id, i, t, r) VALUES(" + record.Item1.ToString(this.invClt) + "," + record.Item2.ToString(this.invClt)
+                        + ",'" + record.Item3 + "'," + record.Item4.ToString(this.invClt) + ");";
+
+                    using (var statement = connection.Prepare(command))
+                    {
+                        statement.Step();
+                    }
+                }
+
+                var commitTransactionCommand = "COMMIT TRANSACTION";
+
+                using (var statement = connection.Prepare(commitTransactionCommand))
+                {
+                    statement.Step();
+                }
+
+                foreach (var record in insertedRecords)
+                {
+                    var command = "SELECT id, i, t, r FROM TestTransactionCommitSupport WHERE id = " + record.Item1.ToString(this.invClt) + " AND i = " + record.Item2.ToString(this.invClt)
+                        + " AND t = '" + record.Item3 + "' AND r = " + record.Item4.ToString(this.invClt) + ";";
+
+                    using (var statement = connection.Prepare(command))
+                    {
+                        while (statement.Step() == SQLiteResult.ROW)
+                        {
+                            var id = (long)statement[0];
+                            var i = (long)statement[1];
+                            var t = (string)statement[2];
+                            var r = (double)statement[3];
+
+                            queriedRecords.Add(new Tuple<int, long, string, double>((int)id, i, t, r));
+                        }
+                    }
+                }
+
+                using (var statement = connection.Prepare("DROP TABLE TestTransactionCommitSupport;"))
+                {
+                    statement.Step();
+                }
+            }
+
+            Assert.AreEqual(insertedRecords.Count, queriedRecords.Count);
+
+            insertedRecords.Sort((x, y) => { return x.Item1 - y.Item1; });
+            queriedRecords.Sort((x, y) => { return x.Item1 - y.Item1; });
+
+            for (var i = 0; i < insertedRecords.Count; i++)
+            {
+                var insertedRecord = insertedRecords[i];
+                var queriedRecord = queriedRecords[i];
+
+                Assert.AreEqual(insertedRecord.Item1, queriedRecord.Item1);
+                Assert.AreEqual(insertedRecord.Item2, queriedRecord.Item2);
+                Assert.AreEqual(insertedRecord.Item3, queriedRecord.Item3);
+                Assert.IsTrue(Math.Abs(insertedRecord.Item4 - queriedRecord.Item4) <= Math.Abs(insertedRecord.Item4 * 0.0000001));
             }
         }
 

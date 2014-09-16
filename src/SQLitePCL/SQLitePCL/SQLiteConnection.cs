@@ -372,8 +372,7 @@ namespace SQLitePCL
         {
             try
             {
-                return sqlite3Provider.Sqlite3Changes(this.db);
-
+                return this.sqlite3Provider.Sqlite3Changes(this.db);
             }
             catch (SQLiteException)
             {
