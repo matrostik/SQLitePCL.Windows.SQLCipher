@@ -92,7 +92,6 @@
     <Compile Include="AppDelegate.cs" />
     <None Include="Info.plist" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <BundleResource Include="Resources\Default.png" />
@@ -103,12 +102,6 @@
     <Reference Include="MonoTouch.NUnitLite" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="SQLitePCL">
-      <HintPath>..\packages\SQLitePCL.3.8.7.2\lib\MonoTouch\SQLitePCL.dll</HintPath>
-    </Reference>
-    <Reference Include="SQLitePCL.Ext">
-      <HintPath>..\packages\SQLitePCL.3.8.7.2\lib\MonoTouch\SQLitePCL.Ext.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />

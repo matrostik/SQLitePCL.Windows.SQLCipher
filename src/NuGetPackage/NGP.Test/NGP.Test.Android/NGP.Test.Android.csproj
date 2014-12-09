@@ -52,12 +52,6 @@
   <ItemGroup>
     <Reference Include="Mono.Android" />
     <Reference Include="mscorlib" />
-    <Reference Include="SQLitePCL">
-      <HintPath>..\packages\SQLitePCL.3.8.7.2\lib\MonoAndroid\SQLitePCL.dll</HintPath>
-    </Reference>
-    <Reference Include="SQLitePCL.Ext">
-      <HintPath>..\packages\SQLitePCL.3.8.7.2\lib\MonoAndroid\SQLitePCL.Ext.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml" />
@@ -70,7 +64,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
     <None Include="Resources\AboutResources.txt" />
     <None Include="Assets\AboutAssets.txt" />
   </ItemGroup>

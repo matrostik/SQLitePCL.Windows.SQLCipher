@@ -91,7 +91,6 @@
     <Compile Include="AppDelegate.cs" />
     <None Include="Info.plist" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <BundleResource Include="Resources\Default.png" />
@@ -100,12 +99,6 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MonoTouch.NUnitLite" />
-    <Reference Include="SQLitePCL">
-      <HintPath>..\packages\SQLitePCL.3.8.7.2\lib\Xamarin.iOS10\SQLitePCL.dll</HintPath>
-    </Reference>
-    <Reference Include="SQLitePCL.Ext">
-      <HintPath>..\packages\SQLitePCL.3.8.7.2\lib\Xamarin.iOS10\SQLitePCL.Ext.dll</HintPath>
-    </Reference>
     <Reference Include="Xamarin.iOS" />
   </ItemGroup>
   <ItemGroup>

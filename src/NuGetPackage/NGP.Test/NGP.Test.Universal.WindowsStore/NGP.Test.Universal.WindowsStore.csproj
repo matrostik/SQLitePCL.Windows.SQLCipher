@@ -19,7 +19,7 @@
     <PackageCertificateKeyFile>NGP.Test.Universal.WindowsStore_TemporaryKey.pfx</PackageCertificateKeyFile>
     <AppxBundle>Never</AppxBundle>
     <AllowCrossPlatformRetargeting>False</AllowCrossPlatformRetargeting>
-    <NuGetPackageImportStamp>246be87e</NuGetPackageImportStamp>
+    <NuGetPackageImportStamp>d11af7ec</NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -125,7 +125,6 @@
       <SubType>Designer</SubType>
     </AppxManifest>
     <None Include="NGP.Test.Universal.WindowsStore_TemporaryKey.pfx" />
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Images\UnitTestLogo.scale-100.png">
