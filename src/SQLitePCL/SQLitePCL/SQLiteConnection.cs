@@ -26,7 +26,7 @@ namespace SQLitePCL
 
         private ISQLite3Provider sqlite3Provider;
 
-        private IntPtr db;
+        protected IntPtr db;
 
         private bool disposed = false;
 
