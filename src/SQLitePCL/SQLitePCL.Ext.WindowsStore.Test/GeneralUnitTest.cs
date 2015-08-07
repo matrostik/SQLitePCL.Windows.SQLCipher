@@ -35,7 +35,7 @@ namespace SQLitePCL.Ext.WindowsStore.Test
         [TestMethod]
         public void TestValidConnection()
         {
-            using (var connection = new SQLiteConnection(this.databaseRelativePath))
+            using (var connection = new SQLiteConnection(this.databaseRelativePath, "Password1"))
             {
             }
         }

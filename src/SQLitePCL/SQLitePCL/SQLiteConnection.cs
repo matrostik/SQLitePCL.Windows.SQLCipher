@@ -11,6 +11,8 @@ namespace SQLitePCL
 {
     using System;
     using System.Collections.Generic;
+    using Windows.Security.Cryptography;
+    using Windows.Storage.Streams;
 
     public class SQLiteConnection : ISQLiteConnection
     {
@@ -46,6 +48,34 @@ namespace SQLitePCL
         public SQLiteConnection(string fileName, SQLiteOpen openFlag)
             : this(fileName, openFlag, true)
         {
+        }
+
+        public SQLiteConnection(string fileName, string key)
+            : this(fileName, System.Text.UTF8Encoding.UTF8.GetBytes(key))
+        { }
+
+        public SQLiteConnection(string fileName, byte[] key)
+            : this(fileName, SQLiteOpen.READWRITE, true)
+        {
+            var result = (SQLiteResult)this.sqlite3Provider.Sqlite3Key(db, key, key.Length);
+            if (SQLiteResult.OK != result && SQLiteResult.DONE != result)
+            {
+                throw new SQLiteException("Error while setting key for db");
+            }
+            var pragmaCipherAddRandomFormat = "PRAGMA cipher_add_random = \"x\'{0}\'\";";
+            UInt32 randomByteSize = 1024;
+            IBuffer buffer = CryptographicBuffer.GenerateRandom(randomByteSize);
+            var query = String.Format(pragmaCipherAddRandomFormat,
+                CryptographicBuffer.EncodeToHexString(buffer));
+            var stmt = Prepare(query);
+
+            var stmtResult = stmt.Step();
+            if (SQLiteResult.ROW == stmtResult)
+                stmtResult = stmt.Step();
+            if (SQLiteResult.OK != stmtResult && SQLiteResult.DONE != stmtResult)
+            {
+                throw new SQLiteException("Error with cipher_add_random statement");
+            }
         }
 
         private SQLiteConnection(string fileName, SQLiteOpen openFlag, bool setTemporaryDirectory)

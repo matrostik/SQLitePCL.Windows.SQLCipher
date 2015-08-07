@@ -42,6 +42,16 @@ namespace SQLitePCL
             return NativeMethods.sqlite3_win32_set_directory(2, PlatformStorage.Instance.GetTemporaryDirectoryPath());
         }
 
+        int ISQLite3Provider.Sqlite3Key(IntPtr filename, byte[] key, int keylen)
+        {
+            return NativeMethods.sqlite3_key(filename, key, keylen);
+        }
+
+        int ISQLite3Provider.SqLite3Rekey(IntPtr filename, byte[] key, int keylen)
+        {
+            return NativeMethods.sqlite3_rekey(filename, key, keylen);
+        }
+
         int ISQLite3Provider.Sqlite3Open(IntPtr filename, out IntPtr db, int flags)
         {
             return NativeMethods.sqlite3_open_v2(filename, out db, flags, IntPtr.Zero);
@@ -296,6 +306,12 @@ namespace SQLitePCL
         {
             [DllImport("sqlite3.dll", EntryPoint = "sqlite3_win32_set_directory", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Unicode)]
             internal static extern int sqlite3_win32_set_directory(uint directoryType, string directoryPath);
+
+            [DllImport("sqlite3.dll", EntryPoint = "sqlite3_key", CallingConvention = CallingConvention.Cdecl)]
+            public static extern int sqlite3_key(IntPtr db, byte[] key, int keylen);
+
+            [DllImport("sqlite3.dll", EntryPoint = "sqlite3_rekey", CallingConvention = CallingConvention.Cdecl)]
+            public static extern int sqlite3_rekey(IntPtr db, byte[] key, int keylen);
 
             [DllImport("sqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_open")]
             internal static extern int sqlite3_open(IntPtr filename, out IntPtr db);

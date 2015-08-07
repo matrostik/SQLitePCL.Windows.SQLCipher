@@ -18,6 +18,10 @@ namespace SQLitePCL
     {
         int Sqlite3Win32SetDirectory();
 
+        int Sqlite3Key(IntPtr filename, byte[] key, int keylen);
+
+        int SqLite3Rekey(IntPtr filename, byte[] key, int keylen);
+
         int Sqlite3Open(IntPtr filename, out IntPtr db, int flags);
 
         int Sqlite3CloseV2(IntPtr db);
