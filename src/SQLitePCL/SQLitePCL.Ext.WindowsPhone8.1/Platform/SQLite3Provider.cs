@@ -11,7 +11,6 @@ namespace SQLitePCL
 {
     using System;
     using System.Runtime.InteropServices;
-    using Windows.Storage;
 
     /// <summary>
     /// Implements the <see cref="ISQLite3Provider"/> interface for Windows Store.

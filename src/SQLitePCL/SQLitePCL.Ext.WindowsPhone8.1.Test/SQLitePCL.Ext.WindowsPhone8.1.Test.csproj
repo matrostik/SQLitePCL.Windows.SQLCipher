@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ProjectGuid>{82B76017-AF7B-4069-81B9-183C2B87CF7A}</ProjectGuid>
+    <ProjectGuid>{B6A92F4B-277B-4A97-832B-3ABB447459A4}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SQLitePCL.Ext.Universal.WindowsPhone.Test</RootNamespace>
-    <AssemblyName>SQLitePCL.Ext.Universal.WindowsPhone.Test</AssemblyName>
+    <RootNamespace>SQLitePCL.Ext.WindowsPhone81.Test</RootNamespace>
+    <AssemblyName>SQLitePCL.Ext.WindowsPhone81.Test</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformVersion>8.1</TargetPlatformVersion>
     <MinimumVisualStudioVersion>12</MinimumVisualStudioVersion>
@@ -86,7 +86,7 @@
     <AppxManifest Include="Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
-    <None Include="SQLitePCL.Ext.Universal.WindowsPhone.Test_TemporaryKey.pfx" />
+    <None Include="SQLitePCL.Ext.WindowsPhone8.1.Test_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\Logo.scale-240.png" />
@@ -97,17 +97,17 @@
     <Content Include="Assets\WideLogo.scale-240.png" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SQLitePCL.Ext.Universal\SQLitePCL.Ext.Universal.csproj">
-      <Project>{782727c3-24b2-4aee-a3d9-32fe0021c1bf}</Project>
-      <Name>SQLitePCL.Ext.Universal</Name>
+    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SQLitePCL.Ext.WindowsPhone8.1\SQLitePCL.Ext.WindowsPhone8.1.csproj">
+      <Project>{b2cbe1d0-3393-4865-a069-104d75a4af02}</Project>
+      <Name>SQLitePCL.Ext.WindowsPhone8.1</Name>
     </ProjectReference>
     <ProjectReference Include="..\SQLitePCL\SQLitePCL.csproj">
       <Project>{e7f6aae8-d264-49a2-8295-4e3b02b9bf0b}</Project>
       <Name>SQLitePCL</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '12.0' ">
     <VisualStudioVersion>12.0</VisualStudioVersion>
